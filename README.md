@@ -1,20 +1,24 @@
-# AI-Powered Resume Job Matching and Hiring Intelligence System
+# AI-Powered Resume–Job Matching & Hiring Intelligence System
 
-## Overview
-This project is an AI-powered system that matches resumes with job descriptions using Natural Language Processing and Machine Learning techniques.
+## Domain
+HRTech | NLP | ML Ranking Systems
 
-## Features
-- Upload resume (PDF/DOCX)
-- Extract resume text
-- Input job description
-- Calculate similarity score
-- Rank candidates based on matching percentage
+## Objective
+To build an AI-driven semantic resume-job matching platform using NLP and machine learning ranking models.
+
+## Core Features
+- Resume Parsing
+- Skill Inference
+- ML-based Ranking
+- Explainable AI
+- Recruiter Dashboard
 
 ## Tech Stack
-- Python
-- Flask
-- NLP (scikit-learn, spaCy)
-- SQLite
-- HTML, CSS, JavaScript
+- FastAPI
+- React
+- PostgreSQL
+- FAISS
+- Sentence Transformers
 
-## Project Structure
+## Status
+Architecture & AI pipeline under development.
