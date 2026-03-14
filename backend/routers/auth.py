@@ -5,6 +5,8 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 from jose import JWTError, jwt
 import uuid
+import random
+from datetime import datetime, timedelta
 
 from database import get_db
 from models import User, UserRole
@@ -20,6 +22,8 @@ class UserCreate(BaseModel):
     last_name: str
     role: str # "CANDIDATE" or "RECRUITER"
 
+
+
 class UserResponse(BaseModel):
     user_id: str
     email: str
@@ -34,6 +38,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     role: str
+    user_id: str
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
@@ -60,7 +65,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         raise credentials_exception
     return user
 
-@router.post("/signup", response_model=Token)
+
+
+@router.post("/signup")
 def signup(user: UserCreate, db: Session = Depends(get_db)):
     # Check if user already exists
     db_user = db.query(User).filter(User.email == user.email).first()
@@ -73,7 +80,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     except KeyError:
         raise HTTPException(status_code=400, detail="Invalid role. Must be CANDIDATE or RECRUITER")
 
-    # Hash password and create user
+    # Create user
     hashed_password = get_password_hash(user.password)
     new_user = User(
         email=user.email,
@@ -87,9 +94,9 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
-    # Generate Token
-    access_token = create_access_token(data={"user_id": str(new_user.user_id), "role": new_user.role.value})
-    return {"access_token": access_token, "token_type": "bearer", "role": new_user.role.value}
+    return {"message": "Account created successfully. You can now log in.", "email": user.email}
+
+
 
 @router.post("/token", response_model=Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -106,7 +113,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
         )
     
     access_token = create_access_token(data={"user_id": str(user.user_id), "role": user.role.value})
-    return {"access_token": access_token, "token_type": "bearer", "role": user.role.value}
+    return {"access_token": access_token, "token_type": "bearer", "role": user.role.value, "user_id": str(user.user_id)}
 
 @router.get("/me", response_model=UserResponse)
 def read_users_me(current_user: User = Depends(get_current_user)):

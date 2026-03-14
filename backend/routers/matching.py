@@ -28,6 +28,7 @@ class JobData(BaseModel):
     min_education_level: int = 0
     required_certifications: List[str] = Field(default_factory=list)
     keywords: List[str] = Field(default_factory=list)
+    match_threshold: float = 0.6
 
 class MatchRequest(BaseModel):
     resume_data: ResumeData
@@ -39,6 +40,8 @@ class MatchResponse(BaseModel):
     missing_skills: List[str]
     matched_skills: List[str]
     explanation: str
+    threshold: float
+    status: str
 
 @router.post("/", response_model=MatchResponse)
 def evaluate_match(
@@ -54,6 +57,14 @@ def evaluate_match(
         job_dict = payload.job_data.model_dump()
         
         result = matching_service.evaluate_match(resume_dict, job_dict)
+        
+        final_score = result["final_score"]
+        threshold = job_dict.get("match_threshold", 0.6)
+        status = "qualified" if final_score >= threshold else "below_threshold"
+        
+        result["threshold"] = threshold
+        result["status"] = status
+        
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Matching evaluation failed: {str(e)}")

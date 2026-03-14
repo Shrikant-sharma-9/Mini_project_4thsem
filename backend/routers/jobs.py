@@ -22,6 +22,7 @@ class JobCreate(BaseModel):
     required_skills: str = ""
     min_experience_years: float = 0.0
     min_education_level: int = 0
+    match_threshold: float = 0.6
 
 class JobResponse(BaseModel):
     job_id: uuid.UUID
@@ -31,6 +32,7 @@ class JobResponse(BaseModel):
     required_skills: str
     min_experience_years: float
     min_education_level: int
+    match_threshold: float
     status: JobStatus
     created_at: datetime
 
@@ -59,6 +61,8 @@ class CandidateRankResponse(BaseModel):
     resume_summary: Optional[str]
     score_breakdown: ScoreBreakdown
     seniority_level: str
+    threshold: float
+    status: str
 
 @router.post("/", response_model=JobResponse)
 def create_job(
@@ -78,7 +82,8 @@ def create_job(
         description=job.description,
         required_skills=job.required_skills,
         min_experience_years=job.min_experience_years,
-        min_education_level=job.min_education_level
+        min_education_level=job.min_education_level,
+        match_threshold=job.match_threshold
     )
     
     db.add(new_job)
@@ -132,7 +137,8 @@ def get_ranked_candidates_for_job(
         "min_experience_years": float(job.min_experience_years) if job.min_experience_years else 0.0,
         "min_education_level": int(job.min_education_level) if job.min_education_level else 0,
         "required_certifications": [],
-        "keywords": job_skills_list
+        "keywords": job_skills_list,
+        "match_threshold": float(job.match_threshold) if job.match_threshold else 0.6
     }
 
     # 2. Fetch All Resumes with their associated Users
@@ -153,16 +159,18 @@ def get_ranked_candidates_for_job(
             "certifications": []
         }
 
-        # 3. Call AI Matching Service
         try:
             match_result_dict = matching_service.evaluate_match(resume_data_dict, job_data_dict)
+            final_score = match_result_dict["final_score"]
+            threshold = job_data_dict["match_threshold"]
+            status = "qualified" if final_score >= threshold else "below_threshold"
             
             results.append(CandidateRankResponse(
                 user_id=user.user_id,
                 first_name=user.first_name,
                 last_name=user.last_name,
                 email=user.email,
-                match_score=match_result_dict["final_score"],
+                match_score=final_score,
                 semantic_similarity=match_result_dict["semantic_similarity"],
                 matched_skills=match_result_dict["matched_skills"],
                 missing_skills=match_result_dict["missing_skills"],
@@ -170,7 +178,9 @@ def get_ranked_candidates_for_job(
                 experience_years=resume.experience_years or 0,
                 resume_summary=resume.summary,
                 score_breakdown=match_result_dict.get("score_breakdown", {}),
-                seniority_level=match_result_dict.get("seniority_level", "Unknown")
+                seniority_level=match_result_dict.get("seniority_level", "Unknown"),
+                threshold=threshold,
+                status=status
             ))
         except Exception as e:
             # Skip candidates that fail to process
