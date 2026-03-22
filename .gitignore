@@ -1,12 +1,10 @@
-# Python
+# Python virtual environment
+backend/venv/
+
+# Python caches
 __pycache__/
 *.pyc
 *.pyo
-*.pyd
-
-# Virtual environment
-backend/venv/
-frontend/node_modules/
 
 # Logs
 *.log
@@ -15,6 +13,5 @@ frontend/node_modules/
 .DS_Store
 Thumbs.db
 
-# IDEs
-.vscode/
-.idea/
+# Node modules
+frontend/node_modules/
