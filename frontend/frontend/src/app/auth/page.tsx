@@ -304,7 +304,7 @@ function AuthForm() {
       </div>
 
       {/* RIGHT: AI Info Panel */}
-      <div className="hidden md:flex flex-col max-w-xl text-white space-y-6 z-10 -ml-4">
+      <div className="hidden md:flex flex-col max-w-xl text-white space-y-6 z-10 -ml-8">
         <h2 className="text-4xl font-bold leading-tight">
           Hire Smarter with <span className="text-green-400">AI</span>
         </h2>
