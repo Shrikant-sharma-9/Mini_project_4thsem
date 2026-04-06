@@ -8,7 +8,7 @@ import json
 
 from database import get_db
 from models import Job, User, JobStatus, Resume
-from routers.auth import get_current_user
+from routers.auth import get_current_user, RoleChecker
 
 # Added matching service imports
 from routers.matching import get_matching_service, MatchResponse, JobData
@@ -67,14 +67,9 @@ class CandidateRankResponse(BaseModel):
 @router.post("/", response_model=JobResponse)
 def create_job(
     job: JobCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(RoleChecker(["RECRUITER"])),
     db: Session = Depends(get_db)
 ):
-    if current_user.role.value != "RECRUITER":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only recruiters can create jobs."
-        )
 
     new_job = Job(
         recruiter_id=current_user.user_id,
@@ -93,15 +88,10 @@ def create_job(
     return new_job
 
 @router.get("/", response_model=List[JobResponse])
-def list_jobs(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_jobs(current_user: User = Depends(RoleChecker(["RECRUITER"])), db: Session = Depends(get_db)):
     """
     Returns jobs posted by the current recruiter.
     """
-    if current_user.role.value != "RECRUITER":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only recruiters can view their jobs."
-            )
             
     jobs = db.query(Job).filter(Job.recruiter_id == current_user.user_id, Job.status == JobStatus.OPEN).all()
     return jobs
@@ -109,7 +99,7 @@ def list_jobs(current_user: User = Depends(get_current_user), db: Session = Depe
 @router.get("/{job_id}/candidates", response_model=List[CandidateRankResponse])
 def get_ranked_candidates_for_job(
     job_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(RoleChecker(["RECRUITER"])),
     db: Session = Depends(get_db),
     matching_service: MatchingService = Depends(get_matching_service)
 ):
@@ -117,11 +107,6 @@ def get_ranked_candidates_for_job(
     Fetches all candidate resumes, structures the data, runs the Matching Service 
     against this specific job, and sorts them by score descendings.
     """
-    if current_user.role.value != "RECRUITER":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only recruiters can view candidates."
-        )
 
     # 1. Fetch Job
     job = db.query(Job).filter(Job.job_id == job_id, Job.recruiter_id == current_user.user_id).first()
@@ -195,7 +180,7 @@ def get_ranked_candidates_for_job(
 @router.get("/{job_id}/analytics")
 def get_job_analytics(
     job_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(RoleChecker(["RECRUITER"])),
     db: Session = Depends(get_db),
     matching_service: MatchingService = Depends(get_matching_service)
 ):

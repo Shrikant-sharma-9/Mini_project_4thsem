@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UploadCloud, CheckCircle2, AlertCircle, Loader2, ArrowLeft, BrainCircuit, Sparkles, Award, LogOut } from "lucide-react";
+import { UploadCloud, CheckCircle2, AlertCircle, Loader2, BrainCircuit, Sparkles, Award, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 

@@ -87,3 +87,12 @@ class Interview(Base):
     scheduled_time = Column(DateTime, nullable=False)
     status = Column(Enum(InterviewStatus), default=InterviewStatus.SCHEDULED)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class Feedback(Base):
+    __tablename__ = 'feedback'
+    
+    feedback_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    rating = Column(Integer, nullable=False) # e.g. 1-5
+    comments = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

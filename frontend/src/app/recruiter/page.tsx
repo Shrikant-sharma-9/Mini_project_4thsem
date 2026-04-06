@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, AlertCircle, Loader2, ArrowLeft, Target, Award, BookOpen, Clock, Briefcase, Plus, Users, BarChart3, TrendingUp, AlertTriangle, Cpu, Sparkles, ArrowRight, LogOut } from "lucide-react";
-import Link from "next/link";
+import { AlertCircle, Loader2, ArrowLeft, Target, Award, BookOpen, Clock, Briefcase, Plus, Users, BarChart3, TrendingUp, AlertTriangle, Cpu, Sparkles, ArrowRight, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // Define Types
@@ -74,6 +73,8 @@ export default function RecruiterDashboard() {
     const [candidates, setCandidates] = useState<CandidateMatch[]>([]);
     const [loadingCandidates, setLoadingCandidates] = useState(false);
     const [jobAnalytics, setJobAnalytics] = useState<JobAnalytics | null>(null);
+    const [applications, setApplications] = useState<{application_id: string, candidate_name: string, match_score: number, status: string}[]>([]);
+
 
     // Interview Scheduling State
     const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
@@ -104,8 +105,8 @@ export default function RecruiterDashboard() {
             if (!res.ok) throw new Error("Failed to fetch jobs");
             const data = await res.json();
             setJobs(data);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : String(err));
         } finally {
             setLoadingJobs(false);
         }
@@ -148,8 +149,8 @@ export default function RecruiterDashboard() {
             setMatchThreshold(0.60);
             setActiveTab("JOBS");
             fetchJobs();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : String(err));
         } finally {
             setCreatingJob(false);
         }
@@ -180,8 +181,17 @@ export default function RecruiterDashboard() {
                 setJobAnalytics(statData);
             }
 
-        } catch (err: any) {
-            setError(err.message);
+            // Fetch Applications
+            const appRes = await fetch(`http://localhost:8000/api/v1/applications/job/${jobId}`, {
+                headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+            });
+            if (appRes.ok) {
+                const appData = await appRes.json();
+                setApplications(appData);
+            }
+
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : String(err));
         } finally {
             setLoadingCandidates(false);
         }
@@ -227,10 +237,38 @@ export default function RecruiterDashboard() {
             setInterviewTime("");
             setSelectedCandidate(null);
 
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : String(err));
         } finally {
             setSchedulingInterview(false);
+        }
+    };
+
+    const handleUpdateApplicationStatus = async (appId: string, status: string) => {
+        try {
+            const res = await fetch(`http://localhost:8000/api/v1/applications/${appId}/status`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                },
+                body: JSON.stringify({ status })
+            });
+
+            if (!res.ok) throw new Error("Failed to update status");
+            
+            // Refresh applications
+            if (selectedJobId) {
+                const appRes = await fetch(`http://localhost:8000/api/v1/applications/job/${selectedJobId}`, {
+                    headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+                });
+                if (appRes.ok) {
+                    const appData = await appRes.json();
+                    setApplications(appData);
+                }
+            }
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : String(err));
         }
     };
 
@@ -585,11 +623,56 @@ export default function RecruiterDashboard() {
                                             <div className="bg-black/50 rounded-2xl p-6 border border-white/5 lg:col-span-1 flex flex-col relative overflow-hidden group">
                                                 <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 blur-[30px] group-hover:bg-purple-500/10 transition-all pointer-events-none" />
                                                 <span className="text-purple-400 text-xs uppercase tracking-widest font-bold block mb-3 flex items-center gap-2"><Cpu className="w-3.5 h-3.5" /> Engine Explanation</span>
-                                                <p className="text-sm text-zinc-300 font-medium flex-grow leading-relaxed relative z-10">{candidate.explanation}</p>
+                                                <ul className="text-sm text-zinc-300 font-medium flex-grow leading-relaxed relative z-10 space-y-2 list-none">
+                                                    {candidate.explanation.split('. ').filter(Boolean).map((point, i) => (
+                                                        <li key={i} className="flex items-start gap-2">
+                                                            <span className="text-purple-500/70 mt-1.5 shrink-0 text-[10px]">●</span>
+                                                            <span>{point.endsWith('.') ? point : point + '.'}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
                                             </div>
                                         </div>
                                     </motion.div>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* Applications Table */}
+                        {applications.length > 0 && (
+                            <div className="mt-12 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+                                <h3 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
+                                    <BookOpen className="text-blue-400 w-6 h-6" /> Applications Received
+                                </h3>
+                                <div className="overflow-x-auto text-sm">
+                                    <table className="w-full text-left">
+                                        <thead className="text-xs text-zinc-500 uppercase tracking-widest border-b border-white/10">
+                                            <tr>
+                                                <th className="py-4">Candidate Name</th>
+                                                <th className="py-4">Score</th>
+                                                <th className="py-4">Status</th>
+                                                <th className="py-4 shrink-0 px-4 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5">
+                                            {applications.map(app => (
+                                                <tr key={app.application_id} className="hover:bg-white/5 transition-colors">
+                                                    <td className="py-4 font-bold text-zinc-200">{app.candidate_name}</td>
+                                                    <td className="py-4 text-zinc-400">{Math.round(app.match_score * 100)}%</td>
+                                                    <td className="py-4">
+                                                        <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-widest ${app.status === 'SHORTLISTED' ? 'bg-emerald-500/10 text-emerald-400' : app.status === 'REJECTED' ? 'bg-red-500/10 text-red-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
+                                                            {app.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 text-right px-4 space-x-2">
+                                                        <button disabled={app.status === 'SHORTLISTED'} onClick={() => handleUpdateApplicationStatus(app.application_id, 'shortlist')} className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 disabled:opacity-30 rounded-lg text-xs font-bold transition">Shortlist</button>
+                                                        <button disabled={app.status === 'REJECTED'} onClick={() => handleUpdateApplicationStatus(app.application_id, 'reject')} className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/40 text-red-500 disabled:opacity-30 rounded-lg text-xs font-bold transition">Reject</button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         )}
                     </motion.div>
@@ -635,7 +718,7 @@ export default function RecruiterDashboard() {
                                         onChange={(e) => setInterviewTime(e.target.value)}
                                         className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-500/50 transition-colors text-white [color-scheme:dark]"
                                     />
-                                    <p className="text-[11px] text-zinc-500 mt-2 font-medium">Leave explicitly blank to leverage the Engine's auto-scheduler logic.</p>
+                                    <p className="text-[11px] text-zinc-500 mt-2 font-medium">Leave explicitly blank to leverage the Engine&apos;s auto-scheduler logic.</p>
                                 </div>
                             </div>
 

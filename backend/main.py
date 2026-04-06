@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env
 load_dotenv()
 
-from routers import jobs, resumes, matching, auth, candidates, interviews
+from routers import jobs, resumes, matching, auth, candidates, interviews, feedback, applications
 from database import init_db
 
 app = FastAPI(
@@ -18,17 +18,35 @@ app = FastAPI(
 from fastapi.responses import JSONResponse
 import traceback
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Request
+from limiter import limiter
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        return response
+
 @app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
+async def global_exception_handler(request: Request, exc: Exception):
     print(traceback.format_exc())
     return JSONResponse(status_code=500, content={"detail": str(exc), "traceback": traceback.format_exc()})
 
 # Initialize Database tables
 init_db()
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SecurityHeadersMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], 
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,6 +58,8 @@ app.include_router(matching.router, prefix="/api/v1/match", tags=["Matching"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(candidates.router, prefix="/api/v1/candidates", tags=["Candidates"])
 app.include_router(interviews.router, prefix="/api/v1/interviews", tags=["Interviews"])
+app.include_router(feedback.router, prefix="/api/v1/feedback", tags=["Feedback"])
+app.include_router(applications.router, prefix="/api/v1/applications", tags=["Applications"])
 
 @app.get("/health")
 def health_check():

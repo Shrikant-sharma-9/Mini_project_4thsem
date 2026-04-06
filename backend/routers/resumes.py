@@ -6,7 +6,7 @@ import json
 
 from database import get_db
 from models import Resume, User
-from routers.auth import get_current_user
+from routers.auth import get_current_user, RoleChecker
 from services.resume_parser import parse_resume
 from routers.matching import get_matching_service, JobData, MatchResponse
 from services.matching_service import MatchingService
@@ -34,18 +34,13 @@ class UploadAndMatchResponse(BaseModel):
 @router.post("/upload", response_model=ParseResponse)
 async def upload_resume(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(RoleChecker(["CANDIDATE"])),
     db: Session = Depends(get_db)
 ):
     """
     Uploads a resume PDF natively, extracts the text using pdfplumber, 
     and returns a structured data representation. Saves the parsed data to the DB.
     """
-    if current_user.role.value != "CANDIDATE":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only candidates can upload resumes."
-        )
 
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")

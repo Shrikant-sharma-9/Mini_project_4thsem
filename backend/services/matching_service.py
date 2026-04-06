@@ -217,22 +217,40 @@ class MatchingService:
             0.05 * keyword_density_score
         )
 
-        # Generate a short explanation
+        # Generate a detailed structured explanation
         explanation_parts = []
+        
+        # Skill comparison
+        total_skills = len(matched_skills) + len(missing_skills)
+        if total_skills > 0:
+            explanation_parts.append(f"Matched {len(matched_skills)} out of {total_skills} required skills.")
+        if matched_skills:
+            explanation_parts.append(f"Matched skills: {', '.join(matched_skills)}.")
         if missing_skills:
-            explanation_parts.append(f"Missing {len(missing_skills)} required skill(s).")
-        else:
-            explanation_parts.append("Candidate matches all required explicit skills.")
+            explanation_parts.append(f"Missing skills: {', '.join(missing_skills)}.")
             
         if inferred_bonus_skills:
-            explanation_parts.append(f"AI inferred knowledge of: {', '.join(inferred_bonus_skills)} based on applicant's other skills.")
+            explanation_parts.append(f"AI inferred knowledge of: {', '.join(inferred_bonus_skills)}.")
             
-        if r_exp < j_exp:
-            explanation_parts.append(f"Short on experience ({r_exp} vs {j_exp} desired years).")
-            
+        # Experience comparison
+        if j_exp > 0:
+            if r_exp < j_exp:
+                explanation_parts.append(f"Candidate has {r_exp} years experience vs {j_exp} required.")
+            else:
+                explanation_parts.append(f"Exceeds or meets experience requirement ({r_exp} yrs).")
+                
+        # Education comparison
+        if j_edu > 0:
+            if r_edu < j_edu:
+                explanation_parts.append(f"Slightly below education requirement (L{r_edu} vs L{j_edu}).")
+            else:
+                explanation_parts.append("Meets education requirement.")
+                
+        # Semantic mapping
+        semantic_percentage = int(semantic_sim * 100)
+        explanation_parts.append(f"Semantic similarity score is {semantic_percentage}%.")
+
         final_explanation = " ".join(explanation_parts)
-        if not final_explanation:
-            final_explanation = "Candidate is an excellent match."
 
         # Compute exact score breakdown percentages
         breakdown = {

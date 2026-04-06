@@ -2,11 +2,15 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Briefcase, FileText, ArrowRight, Sparkles, Cpu } from "lucide-react";
+import { FileText, ArrowRight, Sparkles, Cpu } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#020202] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
+      {/* Cinematic Background Image */}
+      <div className="absolute inset-0 bg-[url('/hero-bg.png')] bg-cover bg-center bg-no-repeat opacity-[0.35] mix-blend-screen pointer-events-none animate-pulse-slow" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020202]/60 to-[#020202] pointer-events-none" />
+
       {/* Premium Deep Mesh Background Gradients */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[60%] bg-indigo-600/20 blur-[150px] rounded-full mix-blend-screen pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[50%] bg-emerald-600/20 blur-[150px] rounded-full mix-blend-screen pointer-events-none" />
