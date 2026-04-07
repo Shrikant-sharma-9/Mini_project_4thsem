@@ -17,6 +17,7 @@ app = FastAPI(
 
 from fastapi.responses import JSONResponse
 import traceback
+import os
 
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -34,8 +35,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    # Log the full traceback internally securely
+    print(f"Internal Server Error: {request.url}")
     print(traceback.format_exc())
-    return JSONResponse(status_code=500, content={"detail": str(exc), "traceback": traceback.format_exc()})
+    # Return generic message to client to prevent information leakage
+    return JSONResponse(status_code=500, content={"detail": "An internal server error occurred. Please try again later."})
 
 # Initialize Database tables
 init_db()
@@ -44,9 +48,11 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SecurityHeadersMiddleware)
 
+# Secure Dynamic CORS configuration
+frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"], 
+    allow_origins=[frontend_url, "http://127.0.0.1:3000"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

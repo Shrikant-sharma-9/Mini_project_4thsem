@@ -17,7 +17,7 @@ class JobStatus(enum.Enum):
     CLOSED = "CLOSED"
 
 class ApplicationStatus(enum.Enum):
-    PENDING = "PENDING"
+    APPLIED = "APPLIED"
     SHORTLISTED = "SHORTLISTED"
     REJECTED = "REJECTED"
 
@@ -74,8 +74,8 @@ class Application(Base):
     candidate_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     job_id = Column(UUID(as_uuid=True), ForeignKey('jobs.job_id', ondelete='CASCADE'), nullable=False)
     match_score = Column(Numeric(5, 2), default=0.0)
-    status = Column(Enum(ApplicationStatus), default=ApplicationStatus.PENDING)
-    applied_at = Column(DateTime, default=datetime.utcnow)
+    status = Column(Enum(ApplicationStatus), default=ApplicationStatus.APPLIED)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class Interview(Base):
     __tablename__ = 'interviews'

@@ -1,0 +1,172 @@
+TEAM ANALYSIS REPORT
+Team 168
+Project: Mini_project_4thsem
+At Risk
+https://github.com/Shrikant-sharma-9/Mini_project_4thsem
+March 19, 2026  09:46 AM IST
+Team Members: Shrikant Sharma , Uma, Mitali Singh
+Problem Statement: AI-Powered Resume–Job Matching & Hiring Intelligence System
+■ Analysis Scores
+Total Score
+56.5
+Fair
+Quality
+52.9
+Fair
+Security
+85.0
+Excellent
+Originality
+66.6
+Good
+Architecture
+70.0
+Good
+Documentation
+58.0
+Fair
+Effort
+70.0
+Good
+Implementation
+45.5
+Fair
+Engineering
+20.0
+Needs Work
+■ Code Metrics
+Metric
+Value
+Total Files
+1
+Lines of Code
+11,513
+Languages
+Python: 100.0%
+Frameworks
+React, FastAPI, Python, PostgreSQL, Sentence Transformers, FAISS, Next.js, TailwindCSS, Docker
+Architecture
+Microservices
+Engineering Maturity: ■ No tests
+■ Contributors
+Total Commits: 10
+Contributor
+Commits
+Lines Changed
+Share
+Mitali
+4
++8774/-0
+40.0%
+Uma Sharma
+2
++259/-0
+20.0%
+Shrikant-sharma-9
+4
++2480/-0
+40.0%
+■ AI Analysis & Feedback
+AI-Generated Content: 0.0% ■ Verdict: MVP
+■ Features Implemented:
+ AI-Driven Semantic Matching
+
+ Intelligent Resume Parsing
+ Role-Based Dashboards
+ Explainable AI
+ Scalable Architecture
+■ Positive Feedback:
+The project has a strong foundation with effective backend architecture and solid AI capabilities. The use of
+modern technologies like FastAPI and Sentence Transformers shows a commitment to leveraging
+cutting-edge tools. Additionally, the parsing functionality is well-executed and allows for effective resume data
+extraction.
+■■ Areas for Improvement:
+The frontend implementation is lacking, which is critical for user interaction. Prioritizing the development of a
+user-friendly interface will significantly enhance the project's usability. Also, consider expanding the feature set
+to include more job tracking and feedback functionalities to improve overall user engagement.
+■ Feature-by-Feature Analysis
+AI-Driven Semantic Matching — Fully Implemented ■ Quality: Good
+■ The matching algorithm utilizes Sentence Transformers to compare job descriptions and resumes
+semantically.
+■ Enhance the model to include more contextual data for better accuracy.
+Intelligent Resume Parsing — Fully Implemented ■ Quality: Good
+■ Resumes can be uploaded, and relevant information is extracted from PDF files.
+■ Add support for more formats (e.g., DOCX) and improve text extraction accuracy.
+Role-Based Dashboards — Missing ■ Quality: N/A
+■ N/A
+■ Develop user-specific dashboards for candidates and recruiters.
+Explainable AI — Partially Implemented ■ Quality: Average
+■ The system provides match scores but lacks detailed explanations.
+■ Implement logic to provide explanations for each match made.
+User Authentication — Fully Implemented ■ Quality: Good
+■ User registration and login functionalities are operational.
+■ Enhance security with email verification and password reset features.
+■ Product Analysis
+Value Proposition: This system solves the problem of inefficient job matching by providing AI-driven
+recommendations that consider context rather than just keywords.
+Target Users: Recruiters looking to find suitable candidates and candidates seeking job opportunities.
+Competitive Advantage: Utilizes advanced NLP models for semantic matching, which is superior to traditional
+keyword-based approaches.
+Market Readiness: Beta Ready
+■ Suggested New Features
+1. Frontend UI Components — Priority: Critical
+
+Why: A user-friendly interface is essential for both candidates and recruiters to interact with the system effectively.
+How: Utilize React to create responsive components for job listings and application status.
+2. Job Application Tracking — Priority: High
+Why: Allows candidates and recruiters to track application statuses, enhancing the user experience.
+How: Integrate a dashboard that displays application histories and statuses.
+3. User Feedback System — Priority: Medium
+Why: Collecting feedback can help improve the matching algorithms and user experience.
+How: Implement forms for users to submit feedback on matches and system performance.
+4. Enhanced Security Features — Priority: High
+Why: Improving security can protect user data and build trust.
+How: Implement OAuth or 2FA for user authentication.
+■ Overall Recommendation
+Focus on developing the frontend components to ensure a seamless user experience. Additionally, implement the
+suggested features to enrich the platform's capabilities and better serve your target audience.
+■ Security Analysis
+Security Score: 85.0/100 (Secrets: 100.0, Practices: 64.0) ■ Secrets Detected: 0
+■ Security Best Practices:
+✗ Rate Limiting
+✗ Authentication
+✗ Authorization
+✓ Input Validation
+✗ CORS Configuration
+✗ Security Headers
+✓ SQL Injection Prevention
+✗ XSS Prevention
+✗ CSRF Protection
+✗ Password Hashing
+■ Security Recommendations:
+1. Implement Authorization [Priority: 9/10]
+Authorization is not implemented in this codebase. Check user permissions before allowing actions (e.g., only admins can
+delete data)
+2. Implement Rate Limiting [Priority: 7/10]
+Rate Limiting is not implemented in this codebase. Add rate limiting to prevent people from spamming your API with too many
+requests
+3. Implement Authentication [Priority: 7/10]
+Authentication is only partially implemented (found in 1 file(s)). Add user login/authentication so only authorized users can
+access your app
+4. Implement CSRF Protection [Priority: 7/10]
+
+CSRF Protection is not implemented in this codebase. Add CSRF tokens to forms to prevent fake form submissions from other
+websites
+5. Implement Password Hashing [Priority: 7/10]
+Password Hashing is only partially implemented (found in 1 file(s)). Hash passwords before storing them (never store plain text
+passwords!)
+… and 3 more
+■ No security issues detected.
+■■ Files Requiring Review
+Files flagged for potential AI generation or similarity issues:
+File
+AI %
+Risk Level
+models.py
+33%
+Low
+■ Risk Flags
+ inactive
+ Last Analysis: March 17, 2026  03:26 PM IST
+ Generated by ProjectFlow — GitHub Analysis System
+

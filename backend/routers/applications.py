@@ -46,7 +46,7 @@ def get_candidate_applications(
             "candidate_id": str(a.candidate_id),
             "match_score": float(a.match_score),
             "status": a.status.value,
-            "applied_at": a.applied_at.isoformat()
+            "created_at": a.created_at.isoformat()
         })
     return response_data
 
@@ -88,6 +88,6 @@ def get_job_applications(
             "candidate_name": name,
             "match_score": float(a.match_score),
             "status": a.status.value,
-            "applied_at": a.applied_at.isoformat()
+            "created_at": a.created_at.isoformat()
         })
     return result

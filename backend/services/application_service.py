@@ -16,7 +16,7 @@ def create_application(db: Session, candidate_id: str, job_id: str, match_score:
         candidate_id=uuid.UUID(candidate_id),
         job_id=uuid.UUID(job_id),
         match_score=match_score,
-        status=ApplicationStatus.PENDING
+        status=ApplicationStatus.APPLIED
     )
     db.add(new_app)
     db.commit()
@@ -32,7 +32,7 @@ def update_application_status(db: Session, application_id: str, status: str):
         return None
     
     # Handle both string values and Enum conversion easily
-    status_enum = ApplicationStatus.PENDING
+    status_enum = ApplicationStatus.APPLIED
     if "shortlist" in status.lower():
         status_enum = ApplicationStatus.SHORTLISTED
     elif "reject" in status.lower():

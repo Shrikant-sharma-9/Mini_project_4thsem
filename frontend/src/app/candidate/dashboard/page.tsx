@@ -38,7 +38,7 @@ interface Application {
   company: string;
   match_score: number;
   status: string;
-  applied_at: string;
+  created_at: string;
 }
 
 interface JobMatch {
@@ -206,6 +206,10 @@ export default function CandidateDashboard() {
     ? Math.round(matches.reduce((acc, match) => acc + match.match_score, 0) / matches.length * 100)
     : 0;
 
+  const upcomingInterviews = interviews.filter(
+    interview => new Date(interview.scheduled_time) > new Date()
+  );
+
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black text-slate-200 p-6 md:p-8">
       
@@ -366,18 +370,18 @@ export default function CandidateDashboard() {
           </div>
 
           {/* Upcoming Interviews Section */}
-          {interviews.length > 0 && (
+          {upcomingInterviews.length > 0 && (
             <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/60 rounded-2xl overflow-hidden shadow-xl mb-6">
               <div className="p-6 border-b border-slate-800/60 bg-slate-900/50 flex justify-between items-center">
                 <h3 className="text-lg font-semibold flex items-center">
                   <VideoCameraIcon className="h-5 w-5 mr-2 text-pink-400" />
                   Upcoming Interviews
                 </h3>
-                <span className="text-xs font-bold text-slate-900 bg-pink-400 px-2 py-1 rounded-md">{interviews.length} Scheduled</span>
+                <span className="text-xs font-bold text-slate-900 bg-pink-400 px-2 py-1 rounded-md">{upcomingInterviews.length} Scheduled</span>
               </div>
               
               <div className="divide-y divide-slate-800/60">
-                {interviews.map((interview, idx) => (
+                {upcomingInterviews.map((interview, idx) => (
                   <motion.div 
                     key={interview.interview_id}
                     initial={{ opacity: 0, scale: 0.98 }}
@@ -533,9 +537,9 @@ export default function CandidateDashboard() {
                     applications.map((app) => (
                       <tr key={app.application_id} className="hover:bg-slate-800/30 transition-colors">
                         <td className="px-6 py-4 font-medium text-slate-200">{app.job_title}</td>
-                        <td className="px-6 py-4 text-slate-400">{app.company}</td>
+                        <td className="px-6 py-4 text-slate-400">Tech Corp</td>
                         <td className="px-6 py-4 text-slate-400">
-                          {new Date(app.applied_at).toLocaleDateString()}
+                          {new Date(app.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 text-right">
                           <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${

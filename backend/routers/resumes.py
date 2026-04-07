@@ -42,15 +42,15 @@ async def upload_resume(
     and returns a structured data representation. Saves the parsed data to the DB.
     """
 
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+    if file.content_type not in ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] and not file.filename.lower().endswith(".docx"):
+        raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported.")
         
     try:
         # Read file contents into memory
         file_bytes = await file.read()
         
         # Parse text and extract structured entities
-        parsed_data = parse_resume(file_bytes)
+        parsed_data = parse_resume(file_bytes, file.filename)
         
         full_text = parsed_data["text"]
         
@@ -95,8 +95,8 @@ async def upload_and_match(
     End-to-End Flow: Uploads PDF, parses text & entities, and immediately scores against job data.
     Requires multipart/form-data. JobData must be passed as a serialized JSON string field.
     """
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+    if file.content_type not in ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] and not file.filename.lower().endswith(".docx"):
+        raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported.")
         
     try:
         # 1. Parse Job Data payload
@@ -109,7 +109,7 @@ async def upload_and_match(
 
         # 2. Extract PDF text and parse Resume Entities
         file_bytes = await file.read()
-        parsed_resume_dict = parse_resume(file_bytes)
+        parsed_resume_dict = parse_resume(file_bytes, file.filename)
         resume_data_model = ResumeDataModel(**parsed_resume_dict)
         
         # 3. Call AI Matching Service

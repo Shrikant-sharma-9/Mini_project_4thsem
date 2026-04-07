@@ -35,7 +35,7 @@ class CandidateService:
 
     def get_applications(self, candidate_id: uuid.UUID) -> List[Dict[str, Any]]:
         candidate_id = uuid.UUID(str(candidate_id))
-        applications = self.db.query(Application, Job).join(Job, Application.job_id == Job.job_id).filter(Application.candidate_id == candidate_id).order_by(Application.applied_at.desc()).all()
+        applications = self.db.query(Application, Job).join(Job, Application.job_id == Job.job_id).filter(Application.candidate_id == candidate_id).order_by(Application.created_at.desc()).all()
         
         result = []
         for app, job in applications:
@@ -46,7 +46,7 @@ class CandidateService:
                 "company": "Company", # Placeholder, would come from Recruiter/Company profile
                 "match_score": float(app.match_score),
                 "status": app.status.value,
-                "applied_at": app.applied_at
+                "created_at": app.created_at
             })
         return result
 

@@ -73,17 +73,19 @@ class MatchingService:
         G.add_edges_from(edges)
         return G
 
-    def _expand_skills(self, skills: set) -> set:
+    def _expand_skills_with_sources(self, skills: set) -> Dict[str, str]:
         """
-        Traverses the Knowledge Graph to inject implied skills.
-        If a user has ['nextjs'], this expands dynamically to ['nextjs', 'react', 'javascript', 'html', 'css'].
+        Traverses the Knowledge Graph to inject implied skills and tracks their origin.
+        Returns a dictionary: {implied_skill: origin_skill}
         """
-        expanded = set(skills)
+        expanded = {skill: skill for skill in skills}
         for skill in skills:
             if skill in self.skill_graph:
                 # Add all descendants (nodes reachable from this skill)
                 implied_skills = nx.descendants(self.skill_graph, skill)
-                expanded.update(implied_skills)
+                for implied in implied_skills:
+                    if implied not in expanded:
+                        expanded[implied] = skill
         return expanded
 
     def generate_normalized_embedding(self, text: str) -> np.ndarray:
@@ -154,8 +156,9 @@ class MatchingService:
         r_skills_explicit = {str(s).lower().strip() for s in resume_data.get("skills", [])}
         j_skills = {str(s).lower().strip() for s in job_data.get("required_skills", [])}
         
-        # Expand candidate's explicit skills using the NetworkX Graph
-        r_skills_inferred = self._expand_skills(r_skills_explicit)
+        # Expand candidate's explicit skills using the NetworkX Graph and track derivations
+        inferred_dict = self._expand_skills_with_sources(r_skills_explicit)
+        r_skills_inferred = set(inferred_dict.keys())
         
         # Calculate matches using the newly inferred superset
         matched_skills = list(j_skills.intersection(r_skills_inferred))
@@ -230,7 +233,8 @@ class MatchingService:
             explanation_parts.append(f"Missing skills: {', '.join(missing_skills)}.")
             
         if inferred_bonus_skills:
-            explanation_parts.append(f"AI inferred knowledge of: {', '.join(inferred_bonus_skills)}.")
+            inferred_details = [f"{s} (derived from {inferred_dict[s]})" for s in inferred_bonus_skills]
+            explanation_parts.append(f"AI inferred knowledge of: {', '.join(inferred_details)}.")
             
         # Experience comparison
         if j_exp > 0:
@@ -249,6 +253,25 @@ class MatchingService:
         # Semantic mapping
         semantic_percentage = int(semantic_sim * 100)
         explanation_parts.append(f"Semantic similarity score is {semantic_percentage}%.")
+
+        # Certifications comparison
+        if j_certs:
+            if cert_score == 1.0:
+                explanation_parts.append("Fully meets specific certification requirements.")
+            elif cert_score > 0:
+                matched_certs = list(j_certs.intersection(r_certs))
+                explanation_parts.append(f"Partially meets certifications ({len(matched_certs)} out of {len(j_certs)}).")
+            else:
+                explanation_parts.append("Missing required certifications.")
+
+        # Keyword density comparison
+        if keywords:
+            if keyword_density_score == 1.0:
+                explanation_parts.append("Resume contains all relevant ecosystem keywords.")
+            elif keyword_density_score >= 0.5:
+                explanation_parts.append("Good density of relevant ecosystem keywords.")
+            else:
+                explanation_parts.append("Low density of associated job keywords.")
 
         final_explanation = " ".join(explanation_parts)
 

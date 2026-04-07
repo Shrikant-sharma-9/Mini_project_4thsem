@@ -1,8 +1,16 @@
 import re
 import pdfplumber
+import docx
 import logging
 from typing import List, Dict, Any, Optional
 from io import BytesIO
+import spacy
+
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    # Will fail gracefully if model hasn't finished downloading yet
+    nlp = None
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +51,20 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
         logger.error(f"Failed to parse PDF: {str(e)}")
         raise ValueError("Invalid or corrupted PDF file.")
 
+def extract_text_from_docx(file_bytes: bytes) -> str:
+    """
+    Extracts raw text from a DOCX file in memory.
+    """
+    try:
+        doc = docx.Document(BytesIO(file_bytes))
+        full_text = "\n".join([para.text for para in doc.paragraphs])
+        sanitized_text = full_text.replace('\x00', '')
+        mitigated_text = apply_bias_mitigation(sanitized_text)
+        return mitigated_text
+    except Exception as e:
+        logger.error(f"Failed to parse DOCX: {str(e)}")
+        raise ValueError("Invalid or corrupted DOCX file.")
+
 def apply_bias_mitigation(text: str) -> str:
     """
     Strips potential bias identifiers (names, ages, genders, origins) before AI sees the text.
@@ -64,18 +86,30 @@ def apply_bias_mitigation(text: str) -> str:
 
 def extract_skills(text: str) -> List[str]:
     """
-    Extracts explicit skills from the text based on the predefined dictionary.
+    Extracts skills through a Hybrid Engine: 
+    1. Exact matching bounded by predefined SKILL_DICTIONARY
+    2. Dynamic ML Named Entity Recognition (NER) capturing unseen proper frameworks.
     """
     text_lower = text.lower()
     found_skills = set()
     
-    # Simple word boundary regex search for each skill to prevent partial matches
+    # Simple word boundary regex search for the strict known dictionary
     for skill in SKILL_DICTIONARY:
-        # e.g., \bgo\b matches "Go" but not "Google"
         pattern = r'\b' + re.escape(skill) + r'\b'
         if re.search(pattern, text_lower):
             found_skills.add(skill)
             
+    # Dynamic NER Inference pulling untracked frameworks
+    if nlp is not None:
+        doc = nlp(text)
+        for ent in doc.ents:
+            # Technology names notoriously fall under these entity categories in generalized NERs
+            if ent.label_ in ['ORG', 'PRODUCT']:
+                clean_ent = ent.text.lower().strip()
+                # Bounding basic noise heuristics (not a single letter, not a full paragraph)
+                if 2 < len(clean_ent) < 25 and not any(char.isdigit() for char in clean_ent):
+                    found_skills.add(clean_ent)
+                    
     return sorted(list(found_skills))
 
 def extract_experience_years(text: str) -> float:
@@ -160,16 +194,22 @@ def infer_seniority_level(text: str, experience_years: float) -> str:
     # 4. Fallback to Entry
     return "Entry"
 
-def parse_resume(file_bytes: bytes) -> Dict[str, Any]:
+def parse_resume(file_bytes: bytes, filename: str) -> Dict[str, Any]:
     """
     Orchestrates the full parsing flow: 
-    1. Extract text from PDF
+    1. Extract text from PDF or DOCX
     2. Analyze text for structured entities
     """
-    full_text = extract_text_from_pdf(file_bytes)
+    filename_lower = filename.lower()
+    if filename_lower.endswith(".pdf"):
+        full_text = extract_text_from_pdf(file_bytes)
+    elif filename_lower.endswith(".docx"):
+        full_text = extract_text_from_docx(file_bytes)
+    else:
+        raise ValueError("Unsupported file format. Please upload PDF or DOCX.")
     
     if not full_text:
-        raise ValueError("No text could be extracted from the PDF.")
+        raise ValueError("No text could be extracted from the file.")
 
     skills = extract_skills(full_text)
     exp = extract_experience_years(full_text)
