@@ -53,3 +53,6 @@ postgres_data/
 # Specific Ignore for local AI testing files (if any are saved locally)
 *.pdf
 *.log
+*.db
+*.txt
+!README.md
