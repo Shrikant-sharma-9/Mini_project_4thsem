@@ -52,11 +52,10 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SecurityHeadersMiddleware)
 
-# Secure Dynamic CORS configuration
-frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[frontend_url, "http://127.0.0.1:3000"], 
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
