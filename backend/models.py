@@ -35,6 +35,7 @@ class User(Base):
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     role = Column(Enum(UserRole), default=UserRole.CANDIDATE, nullable=False)
+    is_verified = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

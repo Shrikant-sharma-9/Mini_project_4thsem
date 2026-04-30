@@ -116,6 +116,14 @@ async def upload_and_match(
         # We reuse the matching_service directly, passing the raw dictionaries expected by the service
         match_result_dict = matching_service.evaluate_match(parsed_resume_dict, job_data.model_dump())
         
+        # Add missing fields required by MatchResponse
+        final_score = match_result_dict["final_score"]
+        threshold = job_data.match_threshold
+        status = "qualified" if final_score >= threshold else "below_threshold"
+        
+        match_result_dict["threshold"] = threshold
+        match_result_dict["status"] = status
+        
         # 4. Return Full Object
         return UploadAndMatchResponse(
             resume_data=resume_data_model,

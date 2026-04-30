@@ -35,6 +35,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Catch-all exception handler to ensure that no internal stack traces
+    or sensitive information leak to the client on unhandled server errors.
+    """
     # Log the full traceback internally securely
     print(f"Internal Server Error: {request.url}")
     print(traceback.format_exc())
@@ -67,8 +71,19 @@ app.include_router(interviews.router, prefix="/api/v1/interviews", tags=["Interv
 app.include_router(feedback.router, prefix="/api/v1/feedback", tags=["Feedback"])
 app.include_router(applications.router, prefix="/api/v1/applications", tags=["Applications"])
 
+@app.get("/")
+def read_root():
+    """
+    Root endpoint to verify API reachability.
+    """
+    return {"message": "Welcome to Hiring Intelligence API"}
+
 @app.get("/health")
 def health_check():
+    """
+    Health check endpoint to verify that the API is up and running.
+    Returns a simple JSON status object.
+    """
     return {"status": "healthy", "service": "Hiring Intelligence API"}
 
 if __name__ == "__main__":

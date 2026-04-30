@@ -3,12 +3,14 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { FileText, ArrowRight, Sparkles, Cpu } from "lucide-react";
+import Network3DBackground from "../components/Network3DBackground";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#020202] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
-      {/* Cinematic Background Image */}
-      <div className="absolute inset-0 bg-[url('/hero-bg.png')] bg-cover bg-center bg-no-repeat opacity-[0.35] mix-blend-screen pointer-events-none animate-pulse-slow" />
+      {/* 3D Cinematic Background */}
+      <Network3DBackground />
+      <div className="absolute inset-0 bg-[url('/hero-bg.png')] bg-cover bg-center bg-no-repeat opacity-[0.1] mix-blend-screen pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020202]/60 to-[#020202] pointer-events-none" />
 
       {/* Premium Deep Mesh Background Gradients */}

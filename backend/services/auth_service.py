@@ -4,9 +4,11 @@ from typing import Optional
 from jose import JWTError, jwt
 from pydantic import BaseModel
 
+import os
+
 # Configuration for JWT (in production, these should be securely loaded from env variables)
-SECRET_KEY = "super_secret_ai_hiring_key_for_development_only_please_change"
-ALGORITHM = "HS256"
+SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_ai_hiring_key_for_development_only_please_change")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days for convenience
 
 class TokenData(BaseModel):

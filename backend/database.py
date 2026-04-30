@@ -4,7 +4,7 @@ from models import Base
 import os
 
 # Force SQLite since Postgres isn't running and env vars might be stale
-DATABASE_URL = "sqlite:///./hiring_intelligence.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./hiring_intelligence.db")
 
 # Add connect_args for SQLite
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
