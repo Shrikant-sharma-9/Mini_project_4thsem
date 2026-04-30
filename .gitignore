@@ -1,4 +1,32 @@
-# Ignore Environment / Secrets
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+ENV/
+
+# Node / Frontend
+node_modules/
+.next/
+out/
+build/
+.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+
+# Environment & Secrets
 .env
 .env.local
 .env.development.local
@@ -6,53 +34,25 @@
 .env.production.local
 *.pem
 
-# Ignore Python & Backend Build Files
-backend/venv/
-backend/__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.pytest_cache/
-.coverage
-htmlcov/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-
-# Ignore Next.js / React Frontend Build Files
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/build/
-frontend/.pnp.*
-frontend/.swc/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Ignore IDE / Editor Files
+# OS / Editor
 .vscode/
 .idea/
+.DS_Store
 *.swp
 *.swo
-.DS_Store
+Thumbs.db
 
-# Ignore Docker / Local Database Volumes
+# Database & Logs
+*.sqlite3
+*.db
+*.log
 postgres_data/
 
-# Specific Ignore for local AI testing files (if any are saved locally)
-*.pdf
-*.log
-*.db
+# Temporary / Testing files
 *.txt
-!README.md
+*.pdf
+!README.md
+!requirements.txt
+!package.json
+!*.example
+!.keep
