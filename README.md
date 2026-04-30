@@ -130,7 +130,7 @@ graph TD
 ## 🖼️ Screenshots
 | Recruiter Dashboard | Candidate Matching |
 | :---: | :---: |
-| ![Placeholder: Recruiter Dashboard](https://via.placeholder.com/600x400?text=Recruiter+Dashboard) | ![Placeholder: Match Results](https://via.placeholder.com/600x400?text=Match+Results) |
+| ![Recruiter Dashboard](./screenshots/recruiter_dashboard.png) | ![Candidate Matching](./screenshots/candidate_matching.png) |
 
 ---
 
