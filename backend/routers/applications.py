@@ -22,12 +22,16 @@ def apply_for_job(
     current_user: User = Depends(RoleChecker(["CANDIDATE"])),
     db: Session = Depends(get_db)
 ):
-    app = create_application(db, request.candidate_id, request.job_id, request.match_score)
-    return {
-        "message": "Application submitted successfully",
-        "status": app.status.value,
-        "application_id": str(app.application_id)
-    }
+    try:
+        app = create_application(db, request.candidate_id, request.job_id, request.match_score)
+        return {
+            "message": "Application submitted successfully",
+            "status": app.status.value,
+            "application_id": str(app.application_id)
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to submit application: {str(e)}")
 
 @router.get("/{candidate_id}")
 def get_candidate_applications(
@@ -35,20 +39,22 @@ def get_candidate_applications(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Depending on requirements, we can let recruiters or the candidate themselves see it
-    apps = get_applications_by_candidate(db, candidate_id)
-    
-    response_data = []
-    for a in apps:
-        response_data.append({
-            "application_id": str(a.application_id),
-            "job_id": str(a.job_id),
-            "candidate_id": str(a.candidate_id),
-            "match_score": float(a.match_score),
-            "status": a.status.value,
-            "created_at": a.created_at.isoformat()
-        })
-    return response_data
+    try:
+        apps = get_applications_by_candidate(db, candidate_id)
+        
+        response_data = []
+        for a in apps:
+            response_data.append({
+                "application_id": str(a.application_id),
+                "job_id": str(a.job_id),
+                "candidate_id": str(a.candidate_id),
+                "match_score": float(a.match_score),
+                "status": a.status.value,
+                "created_at": a.created_at.isoformat()
+            })
+        return response_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving applications: {str(e)}")
 
 @router.put("/{application_id}/status")
 def update_status(
@@ -57,14 +63,20 @@ def update_status(
     current_user: User = Depends(RoleChecker(["RECRUITER"])),
     db: Session = Depends(get_db)
 ):
-    app = update_application_status(db, application_id, update.status)
-    if not app:
-        raise HTTPException(status_code=404, detail="Application not found")
-        
-    return {
-        "message": "Status updated successfully",
-        "status": app.status.value
-    }
+    try:
+        app = update_application_status(db, application_id, update.status)
+        if not app:
+            raise HTTPException(status_code=404, detail="Application not found")
+            
+        return {
+            "message": "Status updated successfully",
+            "status": app.status.value
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update status: {str(e)}")
 
 @router.get("/job/{job_id}")
 def get_job_applications(

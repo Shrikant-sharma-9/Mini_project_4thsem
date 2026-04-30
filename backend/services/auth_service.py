@@ -1,10 +1,12 @@
-import bcrypt
+from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 from pydantic import BaseModel
-
 import os
+
+# Password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Configuration for JWT (in production, these should be securely loaded from env variables)
 SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_ai_hiring_key_for_development_only_please_change")
@@ -17,15 +19,11 @@ class TokenData(BaseModel):
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies a plain text password against a stored hash."""
-    try:
-        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-    except Exception:
-        return False
+    return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
     """Hashes a plain text password securely."""
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+    return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Creates a JWT access token containing user identity and role payload."""

@@ -21,12 +21,16 @@ def submit_feedback(
     if not (1 <= payload.rating <= 5):
         raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
         
-    new_feedback = Feedback(
-        user_id=current_user.user_id,
-        rating=payload.rating,
-        comments=payload.comments
-    )
-    db.add(new_feedback)
-    db.commit()
-    db.refresh(new_feedback)
-    return {"message": "Feedback submitted successfully"}
+    try:
+        new_feedback = Feedback(
+            user_id=current_user.user_id,
+            rating=payload.rating,
+            comments=payload.comments
+        )
+        db.add(new_feedback)
+        db.commit()
+        db.refresh(new_feedback)
+        return {"message": "Feedback submitted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to submit feedback: {str(e)}")

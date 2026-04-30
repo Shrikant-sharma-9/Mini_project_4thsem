@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import uuid
 from datetime import datetime
@@ -17,12 +17,12 @@ from services.matching_service import MatchingService
 router = APIRouter()
 
 class JobCreate(BaseModel):
-    title: str
-    description: str
+    title: str = Field(..., min_length=1)
+    description: str = Field(..., min_length=1)
     required_skills: str = ""
-    min_experience_years: float = 0.0
-    min_education_level: int = 0
-    match_threshold: float = 0.6
+    min_experience_years: float = Field(default=0.0, ge=0)
+    min_education_level: int = Field(default=0, ge=0, le=5)
+    match_threshold: float = Field(default=0.6, ge=0.0, le=1.0)
 
 class JobResponse(BaseModel):
     job_id: uuid.UUID
@@ -71,21 +71,32 @@ def create_job(
     db: Session = Depends(get_db)
 ):
 
-    new_job = Job(
-        recruiter_id=current_user.user_id,
-        title=job.title,
-        description=job.description,
-        required_skills=job.required_skills,
-        min_experience_years=job.min_experience_years,
-        min_education_level=job.min_education_level,
-        match_threshold=job.match_threshold
-    )
-    
-    db.add(new_job)
-    db.commit()
-    db.refresh(new_job)
-    
-    return new_job
+    try:
+        if not job.title.strip():
+            raise HTTPException(status_code=400, detail="Job title is required.")
+        if not job.description.strip():
+            raise HTTPException(status_code=400, detail="Job description is required.")
+
+        new_job = Job(
+            recruiter_id=current_user.user_id,
+            title=job.title,
+            description=job.description,
+            required_skills=job.required_skills,
+            min_experience_years=job.min_experience_years,
+            min_education_level=job.min_education_level,
+            match_threshold=job.match_threshold
+        )
+        
+        db.add(new_job)
+        db.commit()
+        db.refresh(new_job)
+        return new_job
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create job posting: {str(e)}"
+        )
 
 @router.get("/", response_model=List[JobResponse])
 def list_jobs(current_user: User = Depends(RoleChecker(["RECRUITER"])), db: Session = Depends(get_db)):
@@ -93,8 +104,14 @@ def list_jobs(current_user: User = Depends(RoleChecker(["RECRUITER"])), db: Sess
     Returns jobs posted by the current recruiter.
     """
             
-    jobs = db.query(Job).filter(Job.recruiter_id == current_user.user_id, Job.status == JobStatus.OPEN).all()
-    return jobs
+    try:
+        jobs = db.query(Job).filter(Job.recruiter_id == current_user.user_id, Job.status == JobStatus.OPEN).all()
+        return jobs
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve job listings: {str(e)}"
+        )
 
 @router.get("/{job_id}/candidates", response_model=List[CandidateRankResponse])
 def get_ranked_candidates_for_job(

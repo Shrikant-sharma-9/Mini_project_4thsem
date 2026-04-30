@@ -32,11 +32,15 @@ def get_candidate_profile(
             detail="You can only view your own profile unless you are a recruiter."
         )
 
-    profile = service.get_candidate_profile(candidate_id)
-    if not profile:
-        raise HTTPException(status_code=404, detail="Candidate not found.")
-        
-    return profile
+    try:
+        profile = service.get_candidate_profile(candidate_id)
+        if not profile:
+            raise HTTPException(status_code=404, detail="Candidate not found.")
+        return profile
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve candidate profile: {str(e)}")
 
 @router.get("/{candidate_id}/applications")
 def get_candidate_applications(
@@ -49,7 +53,10 @@ def get_candidate_applications(
     """
     if current_user.user_id != candidate_id and current_user.role.value != "RECRUITER":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
-    return service.get_applications(candidate_id)
+    try:
+        return service.get_applications(candidate_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve applications: {str(e)}")
 
 @router.get("/{candidate_id}/matches")
 def get_candidate_matches(
@@ -62,7 +69,10 @@ def get_candidate_matches(
     """
     if current_user.user_id != candidate_id and current_user.role.value != "RECRUITER":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
-    return service.get_job_matches(candidate_id)
+    try:
+        return service.get_job_matches(candidate_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve job matches: {str(e)}")
 
 @router.get("/{candidate_id}/interviews")
 def get_candidate_interviews(
@@ -75,4 +85,7 @@ def get_candidate_interviews(
     """
     if current_user.user_id != candidate_id and current_user.role.value != "RECRUITER":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
-    return service.get_interviews(candidate_id)
+    try:
+        return service.get_interviews(candidate_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve interview list: {str(e)}")

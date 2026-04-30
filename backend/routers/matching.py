@@ -15,20 +15,20 @@ def get_matching_service():
     return matching_service_instance
 
 class ResumeData(BaseModel):
-    text: str
+    text: str = Field(..., min_length=1, description="Full text of the resume")
     skills: List[str] = Field(default_factory=list)
-    experience_years: float = 0.0
-    education_level: int = 0
+    experience_years: float = Field(default=0.0, ge=0)
+    education_level: int = Field(default=0, ge=0, le=5)
     certifications: List[str] = Field(default_factory=list)
 
 class JobData(BaseModel):
-    text: str
+    text: str = Field(..., min_length=1, description="Full text of the job description")
     required_skills: List[str] = Field(default_factory=list)
-    min_experience_years: float = 0.0
-    min_education_level: int = 0
+    min_experience_years: float = Field(default=0.0, ge=0)
+    min_education_level: int = Field(default=0, ge=0, le=5)
     required_certifications: List[str] = Field(default_factory=list)
     keywords: List[str] = Field(default_factory=list)
-    match_threshold: float = 0.6
+    match_threshold: float = Field(default=0.6, ge=0.0, le=1.0)
 
 class MatchRequest(BaseModel):
     resume_data: ResumeData
@@ -55,6 +55,12 @@ def evaluate_match(
         # Pydantic automatically serializes the models to dictionaries via .model_dump() / .dict()
         resume_dict = payload.resume_data.model_dump()
         job_dict = payload.job_data.model_dump()
+        
+        # Explicit validation for required fields to return HTTP 400
+        if not resume_dict.get("text") or not resume_dict["text"].strip():
+            raise HTTPException(status_code=400, detail="Resume text is required and cannot be empty.")
+        if not job_dict.get("text") or not job_dict["text"].strip():
+            raise HTTPException(status_code=400, detail="Job text is required and cannot be empty.")
         
         result = matching_service.evaluate_match(resume_dict, job_dict)
         

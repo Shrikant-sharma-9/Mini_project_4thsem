@@ -73,6 +73,7 @@ export default function RecruiterDashboard() {
     const [candidates, setCandidates] = useState<CandidateMatch[]>([]);
     const [loadingCandidates, setLoadingCandidates] = useState(false);
     const [jobAnalytics, setJobAnalytics] = useState<JobAnalytics | null>(null);
+    const [globalAnalytics, setGlobalAnalytics] = useState<{avgScore: number, totalCandidates: number, topSkill: string} | null>(null);
     const [applications, setApplications] = useState<{application_id: string, candidate_name: string, match_score: number, status: string}[]>([]);
 
 
@@ -105,6 +106,42 @@ export default function RecruiterDashboard() {
             if (!res.ok) throw new Error("Failed to fetch jobs");
             const data = await res.json();
             setJobs(data);
+
+            // Aggregate Global Analytics (Simple implementation using per-job analytics)
+            if (data.length > 0) {
+                let totalScore = 0;
+                let totalCand = 0;
+                const skillGaps: Record<string, number> = {};
+
+                const analyticsPromises = data.map((job: Job) => 
+                    fetch(`http://localhost:8000/api/v1/jobs/${job.job_id}/analytics`, {
+                        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+                    }).then(r => r.ok ? r.json() : null)
+                );
+
+                const analyticsResults = await Promise.all(analyticsPromises);
+                let validJobs = 0;
+
+                analyticsResults.forEach(res => {
+                    if (res) {
+                        totalScore += res.average_match_score;
+                        totalCand += res.total_candidates;
+                        res.top_missing_skills.forEach((s: {skill: string, count: number}) => {
+                            skillGaps[s.skill] = (skillGaps[s.skill] || 0) + s.count;
+                        });
+                        validJobs++;
+                    }
+                });
+
+                if (validJobs > 0) {
+                    const topSkill = Object.entries(skillGaps).sort((a, b) => b[1] - a[1])[0]?.[0] || "None";
+                    setGlobalAnalytics({
+                        avgScore: Math.round(totalScore / validJobs),
+                        totalCandidates: totalCand,
+                        topSkill: topSkill
+                    });
+                }
+            }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : String(err));
         } finally {
@@ -311,6 +348,38 @@ export default function RecruiterDashboard() {
                         </button>
                     </div>
                 </div>
+
+                {/* Global Analytics Section */}
+                {!selectedJobId && activeTab === "JOBS" && globalAnalytics && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                        <div className="bg-gradient-to-br from-purple-500/10 to-transparent backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="text-zinc-400 text-xs font-black uppercase tracking-widest">Avg Match Score</div>
+                                <TrendingUp className="text-purple-400 w-5 h-5" />
+                            </div>
+                            <div className="text-4xl font-black text-white">{globalAnalytics.avgScore}%</div>
+                            <div className="text-[10px] text-zinc-500 mt-2 font-bold uppercase tracking-tight">Aggregated across all open missions</div>
+                        </div>
+                        
+                        <div className="bg-gradient-to-br from-indigo-500/10 to-transparent backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="text-zinc-400 text-xs font-black uppercase tracking-widest">Total Candidates</div>
+                                <Users className="text-indigo-400 w-5 h-5" />
+                            </div>
+                            <div className="text-4xl font-black text-white">{globalAnalytics.totalCandidates}</div>
+                            <div className="text-[10px] text-zinc-500 mt-2 font-bold uppercase tracking-tight">Active unique talent profiles in ATS</div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-red-500/10 to-transparent backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="text-zinc-400 text-xs font-black uppercase tracking-widest">Top Missing Skill</div>
+                                <AlertTriangle className="text-red-400 w-5 h-5" />
+                            </div>
+                            <div className="text-4xl font-black text-red-400 capitalize truncate">{globalAnalytics.topSkill}</div>
+                            <div className="text-[10px] text-zinc-500 mt-2 font-bold uppercase tracking-tight">Most frequent knowledge gap detected</div>
+                        </div>
+                    </motion.div>
+                )}
 
                 {error && (
                     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 p-5 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-3 text-red-400">

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Form, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any
 import json
 
@@ -14,11 +14,11 @@ from services.matching_service import MatchingService
 router = APIRouter()
 
 class ResumeDataModel(BaseModel):
-    text: str
-    skills: List[str]
-    experience_years: float
-    education_level: int
-    certifications: List[str]
+    text: str = Field(..., min_length=1)
+    skills: List[str] = Field(default_factory=list)
+    experience_years: float = Field(default=0.0, ge=0)
+    education_level: int = Field(default=0, ge=0, le=5)
+    certifications: List[str] = Field(default_factory=list)
 
 class ParseResponse(BaseModel):
     status: str
@@ -48,29 +48,37 @@ async def upload_resume(
     try:
         # Read file contents into memory
         file_bytes = await file.read()
+        if not file_bytes:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
         
         # Parse text and extract structured entities
         parsed_data = parse_resume(file_bytes, file.filename)
         
-        full_text = parsed_data["text"]
-        
+        full_text = parsed_data.get("text", "")
+        if not full_text.strip():
+             raise HTTPException(status_code=400, detail="Failed to extract text from resume. Please ensure the file is not encrypted or corrupt.")
+
         # Check if user already has a resume and update, or create a new one
-        existing_resume = db.query(Resume).filter(Resume.user_id == current_user.user_id).first()
-        
-        if existing_resume:
-            existing_resume.parsed_text = full_text
-            existing_resume.summary = ", ".join(parsed_data["skills"][:5]) # Simple summary
-            existing_resume.experience_years = int(parsed_data["experience_years"])
-        else:
-            new_resume = Resume(
-                user_id=current_user.user_id,
-                parsed_text=full_text,
-                summary=", ".join(parsed_data["skills"][:5]),
-                experience_years=int(parsed_data["experience_years"])
-            )
-            db.add(new_resume)
+        try:
+            existing_resume = db.query(Resume).filter(Resume.user_id == current_user.user_id).first()
             
-        db.commit()
+            if existing_resume:
+                existing_resume.parsed_text = full_text
+                existing_resume.summary = ", ".join(parsed_data.get("skills", [])[:5]) # Simple summary
+                existing_resume.experience_years = int(parsed_data.get("experience_years", 0))
+            else:
+                new_resume = Resume(
+                    user_id=current_user.user_id,
+                    parsed_text=full_text,
+                    summary=", ".join(parsed_data.get("skills", [])[:5]),
+                    experience_years=int(parsed_data.get("experience_years", 0))
+                )
+                db.add(new_resume)
+                
+            db.commit()
+        except Exception as db_err:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"Database error while saving resume: {str(db_err)}")
 
         # Prepare response
         return ParseResponse(
@@ -80,10 +88,12 @@ async def upload_resume(
             full_text=full_text,
             resume_data=ResumeDataModel(**parsed_data)
         )
+    except HTTPException:
+        raise
     except ValueError as ve:
         raise HTTPException(status_code=422, detail=str(ve))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred while parsing the resume: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred while processing the resume: {str(e)}")
 
 @router.post("/upload-and-match", response_model=UploadAndMatchResponse)
 async def upload_and_match(
@@ -109,7 +119,13 @@ async def upload_and_match(
 
         # 2. Extract PDF text and parse Resume Entities
         file_bytes = await file.read()
+        if not file_bytes:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+            
         parsed_resume_dict = parse_resume(file_bytes, file.filename)
+        if not parsed_resume_dict.get("text", "").strip():
+            raise HTTPException(status_code=400, detail="Failed to extract text from resume. Please ensure the file is not encrypted or corrupt.")
+            
         resume_data_model = ResumeDataModel(**parsed_resume_dict)
         
         # 3. Call AI Matching Service
