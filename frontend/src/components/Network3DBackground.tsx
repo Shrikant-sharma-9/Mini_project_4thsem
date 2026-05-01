@@ -69,11 +69,11 @@ export default function Network3DBackground() {
         if (Math.abs(node.z) > 600) node.vz *= -1;
 
         // rotate Y
-        let rx = node.x * cosY - node.z * sinY;
-        let rz = node.z * cosY + node.x * sinY;
+        const rx = node.x * cosY - node.z * sinY;
+        const rz = node.z * cosY + node.x * sinY;
 
         // rotate X
-        let ry = node.y * cosX - rz * sinX;
+        const ry = node.y * cosX - rz * sinX;
         let finalZ = rz * cosX + node.y * sinX;
 
         // translate Z so it's in front of camera

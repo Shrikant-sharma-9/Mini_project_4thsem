@@ -34,7 +34,9 @@ class CandidateService:
         }
 
     def get_applications(self, candidate_id: uuid.UUID) -> List[Dict[str, Any]]:
+        print(f"DEBUG: candidate_id type: {type(candidate_id)}, value: {candidate_id}")
         candidate_id = uuid.UUID(str(candidate_id))
+        print(f"DEBUG: after conversion: {type(candidate_id)}, value: {candidate_id}")
         applications = self.db.query(Application, Job).join(Job, Application.job_id == Job.job_id).filter(Application.candidate_id == candidate_id).order_by(Application.created_at.desc()).all()
         
         result = []
