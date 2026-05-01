@@ -27,6 +27,18 @@ services:
     networks:
       - app-network
 
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+
 volumes:
   postgres_data:
 
