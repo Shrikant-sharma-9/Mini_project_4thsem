@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Briefcase, FileText, Loader2, ShieldCheck, Mail, Lock, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { API_URL } from "@/lib/utils";
 
 function AuthForm() {
     const router = useRouter();
@@ -40,7 +41,7 @@ function AuthForm() {
                 formData.append("username", email);
                 formData.append("password", password);
 
-                const res = await fetch("http://localhost:8000/api/v1/auth/token", {
+                const res = await fetch(`${API_URL}/api/v1/auth/token`, {
                     method: "POST",
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     body: formData.toString()
@@ -71,7 +72,7 @@ function AuthForm() {
                     role
                 };
 
-                const res = await fetch("http://localhost:8000/api/v1/auth/signup", {
+                const res = await fetch(`${API_URL}/api/v1/auth/signup`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)

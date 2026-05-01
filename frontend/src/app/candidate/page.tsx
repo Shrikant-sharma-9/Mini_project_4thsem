@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { UploadCloud, CheckCircle2, AlertCircle, Loader2, BrainCircuit, Sparkles, Award, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/lib/utils";
 
 export default function CandidateDashboard() {
     const router = useRouter();
@@ -38,7 +39,7 @@ export default function CandidateDashboard() {
         formData.append("file", file);
 
         try {
-            const res = await fetch("http://localhost:8000/api/v1/resumes/upload", {
+            const res = await fetch(`${API_URL}/api/v1/resumes/upload`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${localStorage.getItem("token")}`

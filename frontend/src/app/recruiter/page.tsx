@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Loader2, ArrowLeft, Target, Award, BookOpen, Clock, Briefcase, Plus, Users, BarChart3, TrendingUp, AlertTriangle, Cpu, Sparkles, ArrowRight, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/lib/utils";
 
 // Define Types
 type Job = {
@@ -100,7 +101,7 @@ export default function RecruiterDashboard() {
     const fetchJobs = async () => {
         setLoadingJobs(true);
         try {
-            const res = await fetch("http://localhost:8000/api/v1/jobs/", {
+            const res = await fetch(`${API_URL}/api/v1/jobs/`, {
                 headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
             });
             if (!res.ok) throw new Error("Failed to fetch jobs");
@@ -114,7 +115,7 @@ export default function RecruiterDashboard() {
                 const skillGaps: Record<string, number> = {};
 
                 const analyticsPromises = data.map((job: Job) => 
-                    fetch(`http://localhost:8000/api/v1/jobs/${job.job_id}/analytics`, {
+                    fetch(`${API_URL}/api/v1/jobs/${job.job_id}/analytics`, {
                         headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
                     }).then(r => r.ok ? r.json() : null)
                 );
@@ -163,7 +164,7 @@ export default function RecruiterDashboard() {
         };
 
         try {
-            const res = await fetch("http://localhost:8000/api/v1/jobs/", {
+            const res = await fetch(`${API_URL}/api/v1/jobs/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -202,7 +203,7 @@ export default function RecruiterDashboard() {
 
         try {
             // Fetch Candidates
-            const candRes = await fetch(`http://localhost:8000/api/v1/jobs/${jobId}/candidates`, {
+            const candRes = await fetch(`${API_URL}/api/v1/jobs/${jobId}/candidates`, {
                 headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
             });
             if (!candRes.ok) throw new Error("Failed to load candidates.");
@@ -210,7 +211,7 @@ export default function RecruiterDashboard() {
             setCandidates(candData);
 
             // Fetch Analytics
-            const statRes = await fetch(`http://localhost:8000/api/v1/jobs/${jobId}/analytics`, {
+            const statRes = await fetch(`${API_URL}/api/v1/jobs/${jobId}/analytics`, {
                 headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
             });
             if (statRes.ok) {
@@ -219,7 +220,7 @@ export default function RecruiterDashboard() {
             }
 
             // Fetch Applications
-            const appRes = await fetch(`http://localhost:8000/api/v1/applications/job/${jobId}`, {
+            const appRes = await fetch(`${API_URL}/api/v1/applications/job/${jobId}`, {
                 headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
             });
             if (appRes.ok) {
@@ -247,7 +248,7 @@ export default function RecruiterDashboard() {
                 scheduled_time: interviewTime || null // if empty, backend handles auto-suggest
             };
 
-            const res = await fetch("http://localhost:8000/api/v1/interviews/schedule", {
+            const res = await fetch(`${API_URL}/api/v1/interviews/schedule`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -283,7 +284,7 @@ export default function RecruiterDashboard() {
 
     const handleUpdateApplicationStatus = async (appId: string, status: string) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/v1/applications/${appId}/status`, {
+            const res = await fetch(`${API_URL}/api/v1/applications/${appId}/status`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -296,7 +297,7 @@ export default function RecruiterDashboard() {
             
             // Refresh applications
             if (selectedJobId) {
-                const appRes = await fetch(`http://localhost:8000/api/v1/applications/job/${selectedJobId}`, {
+                const appRes = await fetch(`${API_URL}/api/v1/applications/job/${selectedJobId}`, {
                     headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
                 });
                 if (appRes.ok) {

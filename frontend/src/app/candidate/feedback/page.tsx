@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/lib/utils";
 
 export default function CandidateFeedback() {
   const [rating, setRating] = useState(5);
@@ -21,7 +22,7 @@ export default function CandidateFeedback() {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/api/v1/feedback/", {
+      const res = await fetch(`${API_URL}/api/v1/feedback/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

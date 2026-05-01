@@ -17,6 +17,7 @@ import {
   MapPinIcon,
   VideoCameraIcon
 } from "@heroicons/react/24/outline";
+import { API_URL } from "@/lib/utils";
 
 // Types
 interface CandidateProfile {
@@ -88,7 +89,7 @@ export default function CandidateDashboard() {
         }
 
         // Fetch Profile
-        const profileRes = await fetch(`http://localhost:8000/api/v1/candidates/${userId}`, {
+        const profileRes = await fetch(`${API_URL}/api/v1/candidates/${userId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -97,7 +98,7 @@ export default function CandidateDashboard() {
         setProfile(profileData);
 
         // Fetch Applications
-        const appsRes = await fetch(`http://localhost:8000/api/v1/candidates/${userId}/applications`, {
+        const appsRes = await fetch(`${API_URL}/api/v1/candidates/${userId}/applications`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -107,7 +108,7 @@ export default function CandidateDashboard() {
         }
 
         // Fetch Matches
-        const matchesRes = await fetch(`http://localhost:8000/api/v1/candidates/${userId}/matches`, {
+        const matchesRes = await fetch(`${API_URL}/api/v1/candidates/${userId}/matches`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -117,7 +118,7 @@ export default function CandidateDashboard() {
         }
 
         // Fetch Interviews
-        const interviewsRes = await fetch(`http://localhost:8000/api/v1/candidates/${userId}/interviews`, {
+        const interviewsRes = await fetch(`${API_URL}/api/v1/candidates/${userId}/interviews`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -143,7 +144,7 @@ export default function CandidateDashboard() {
       const userId = localStorage.getItem("user_id");
       if (!token || !userId) return;
       
-      const res = await fetch("http://localhost:8000/api/v1/applications/apply", {
+      const res = await fetch(`${API_URL}/api/v1/applications/apply`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
